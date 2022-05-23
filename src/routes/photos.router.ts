@@ -2,16 +2,35 @@ import express, { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import Photos from "../models/photos";
 import { collections } from "../services/database.service";
+import { createValidator } from "express-joi-validation";
+import { ContainerTypes, ExpressJoiError } from 'express-joi-validation'
+import { decodeToken } from "../firebase/adminTokens";
 
+//Schema joi 
+import photoSchema from "../schemas-joi/photos.schemajoi";
 
 export const photosRouter = express.Router();
 
+const validator = createValidator();
+
 photosRouter.use(express.json());
 
+photosRouter.use((err: any | ExpressJoiError, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // ContainerTypes is an enum exported by this module. It contains strings
+    // such as "body", "headers", "query"...
+    if (err && err.type in ContainerTypes) {
+        const e: ExpressJoiError = err
+        // e.g "you submitted a bad query paramater"
+        res.status(400).end(`You submitted a bad ${e.type} paramater`)
+    } else {
+        res.status(500).end('internal server error')
+    }
+})
 
-photosRouter.get("/photos", async (_req: Request, res: Response) => {
+
+photosRouter.get("/photos", decodeToken, async (_req: Request, res: Response) => {
     try {
-       const photos = await collections.photos.find({}).toArray();
+        const photos = await collections.photos.find({}).toArray();
 
         res.status(200).send(photos);
     } catch (error) {
@@ -19,9 +38,10 @@ photosRouter.get("/photos", async (_req: Request, res: Response) => {
     }
 });
 
-photosRouter.post("/photos", async (req: Request, res: Response) => {
+photosRouter.post("/photos", validator.body(photoSchema), async (_req: Request, res: Response) => {
+    
     try {
-        const newPhotos = req.body;
+        const newPhotos = _req.body;
         const result = await collections.photos.insertOne(newPhotos);
 
         result
@@ -39,7 +59,7 @@ photosRouter.put("/:id", async (req: Request, res: Response) => {
     try {
         const updatedPhotos: Photos = req.body;
         const query = { _id: new ObjectId(id) };
-      
+
         const result = await collections.photos.updateOne(query, { $set: updatedPhotos });
 
         result
