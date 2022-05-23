@@ -38,7 +38,7 @@ photosRouter.get("/photos", decodeToken, async (_req: Request, res: Response) =>
     }
 });
 
-photosRouter.post("/photos", validator.body(photoSchema), async (_req: Request, res: Response) => {
+photosRouter.post("/photos", decodeToken, validator.body(photoSchema), async (_req: Request, res: Response) => {
     
     try {
         const newPhotos = _req.body;
@@ -53,7 +53,7 @@ photosRouter.post("/photos", validator.body(photoSchema), async (_req: Request, 
     }
 });
 
-photosRouter.put("/:id", async (req: Request, res: Response) => {
+photosRouter.put("/:id", decodeToken, async (req: Request, res: Response) => {
     const id = req?.params?.id;
 
     try {
@@ -71,7 +71,7 @@ photosRouter.put("/:id", async (req: Request, res: Response) => {
     }
 });
 
-photosRouter.delete("/:id", async (req: Request, res: Response) => {
+photosRouter.delete("/:id", decodeToken, async (req: Request, res: Response) => {
     const id = req?.params?.id;
 
     try {
