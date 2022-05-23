@@ -6,7 +6,11 @@ services:
         restart: always
         build: .
         ports:
-            - 3000:8080
+            - "3000:8080"
+        links:
+          - mongo
+        volumes:
+               - .:/photos/app      
     
     mongo:
         container_name: mongoDB
